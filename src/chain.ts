@@ -1,6 +1,6 @@
 import { CAIP } from "./spec";
 import { IdentifierSpec } from "./types";
-import { isValidId, joinParams, getParams } from "./utils";
+import { joinParams, getParams } from "./utils";
 
 export interface ChainIdParams {
   namespace: string;
@@ -11,9 +11,6 @@ export class ChainId {
   public static spec: IdentifierSpec = CAIP["2"];
 
   public static parse(id: string): ChainIdParams {
-    if (!isValidId(id, this.spec)) {
-      throw new Error(`Invalid ${this.spec.name} provided: ${id}`);
-    }
     return new ChainId(getParams<ChainIdParams>(id, this.spec)).toJSON();
   }
 

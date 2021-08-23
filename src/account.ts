@@ -1,7 +1,7 @@
 import { ChainId, ChainIdParams } from "./chain";
 import { CAIP } from "./spec";
 import { IdentifierSpec } from "./types";
-import { isValidId, joinParams, getParams } from "./utils";
+import { joinParams, getParams } from "./utils";
 
 export interface AccountIdSplitParams extends ChainIdParams {
   address: string;
@@ -15,9 +15,6 @@ export class AccountId {
   public static spec: IdentifierSpec = CAIP["10"];
 
   public static parse(id: string): AccountIdParams {
-    if (!isValidId(id, this.spec)) {
-      throw new Error(`Invalid ${this.spec.name} provided: ${id}`);
-    }
     const { namespace, reference, address } = getParams<AccountIdSplitParams>(
       id,
       this.spec

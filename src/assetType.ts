@@ -2,7 +2,7 @@ import { AssetName, AssetNameParams } from "./assetName";
 import { ChainId, ChainIdParams } from "./chain";
 import { CAIP } from "./spec";
 import { IdentifierSpec } from "./types";
-import { isValidId, joinParams, getParams } from "./utils";
+import { joinParams, getParams } from "./utils";
 
 export interface AssetTypeParams {
   chainId: string | ChainIdParams;
@@ -13,9 +13,6 @@ export class AssetType {
   public static spec: IdentifierSpec = CAIP["19"].assetType;
 
   public static parse(id: string): AssetTypeParams {
-    if (!isValidId(id, this.spec)) {
-      throw new Error(`Invalid ${this.spec.name} provided: ${id}`);
-    }
     return new AssetType(getParams<AssetTypeParams>(id, this.spec)).toJSON();
   }
 
@@ -30,7 +27,6 @@ export class AssetType {
     if (typeof params === "string") {
       params = AssetType.parse(params);
     }
-
     this.chainId = new ChainId(params.chainId);
     this.assetName = new AssetName(params.assetName);
   }

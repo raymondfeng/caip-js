@@ -1,50 +1,48 @@
 import { IdentifierSpec, Params } from "./types";
 
-export function splitParams(id: string, spec: IdentifierSpec): string[] {
-  return id.split(spec.parameters.delimiter);
+function buildParams(spec: IdentifierSpec, values: string[]) {
+  const params: Params = {};
+  let offset = 0;
+  for (let j = 0; j < spec.parameters.length; j++) {
+    const param = spec.parameters[j];
+    if (typeof param === "string") {
+      params[param] = values[offset];
+      offset++;
+      continue;
+    }
+    const item = buildParams(param, values.slice(offset));
+    params[param.name] = (item.params as unknown) as Record<string, string>;
+    offset += item.offset;
+  }
+  return { offset, params };
 }
 
 export function getParams<T>(id: string, spec: IdentifierSpec): T {
-  const arr = splitParams(id, spec);
-  const params = {};
-  arr.forEach((value, index) => {
-    params[spec.parameters.values[index].name] = value;
-  });
-  return params as T;
+  const regex = new RegExp(`^${spec.regex}$`);
+  const result = regex.exec(id);
+  if (result == null) {
+    throw new Error(`Invalid ${spec.name}(${spec.regex}): ${id}`);
+  }
+  return (buildParams(spec, result.slice(1)).params as unknown) as T;
 }
 
 export function joinParams(params: Params, spec: IdentifierSpec): string {
-  return Object.values(spec.parameters.values)
-    .map(parameter => {
-      const param = params[parameter.name];
-      return typeof param === "string"
-        ? param
-        : joinParams(param, parameter as IdentifierSpec);
+  const id = spec.parameters
+    .map(param => {
+      if (typeof param === "string") {
+        return params[param];
+      }
+      const value = params[param.name];
+      if (typeof value === "string") {
+        return value;
+      }
+      return joinParams(value as Params, param);
     })
-    .join(spec.parameters.delimiter);
+    .join(spec.delimiter);
+  return id;
 }
 
 export function isValidId(id: string, spec: IdentifierSpec): boolean {
-  // console.log("id", id);
-  // console.log("spec", spec);
-  // console.log("before regex");
-  if (!new RegExp(spec.regex).test(id)) return false;
-  // console.log("after regex");
-  // console.log("before split");
-  const params = splitParams(id, spec);
-  // console.log("after split");
-  // console.log("params", params);
-  // console.log("before length");
-  if (params.length !== Object.keys(spec.parameters.values).length)
-    return false;
-  // console.log("after length");
-  // console.log("before matches");
-  const matches = params
-    .map((param, index) =>
-      new RegExp(spec.parameters.values[index].regex).test(param)
-    )
-    .filter(x => !!x);
-  if (matches.length !== params.length) return false;
-  // console.log("after matches");
-  return true;
+  const regex = new RegExp(`^${spec.regex}$`);
+  return regex.test(id);
 }

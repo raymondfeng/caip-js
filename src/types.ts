@@ -4,14 +4,8 @@ export interface ParameterSpec {
 }
 
 export interface IdentifierSpec extends ParameterSpec {
-  parameters: {
-    delimiter: string;
-    values: {
-      [index: string]: ParameterSpec;
-    };
-  };
+  delimiter: string;
+  parameters: (string | IdentifierSpec)[];
 }
 
-export type KeyValue = { [key: string]: string };
-
-export type Params = { [key: string]: string | KeyValue };
+export type Params = Record<string, string | Record<string, string>>;
